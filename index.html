@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title> ElQada </title>
+</head>
+
+<style>
+
+input
+{
+  font-weight: bolder;
+  font-size: 25px;
+  text-align: center;
+  border-radius: 12px;
+  padding: 4px;
+  margin: 4px;
+}
+
+input:focus
+{
+  color: #ffffff;
+  background-color: #000000;
+}
+
+</style>
+
+<body>
+
+<form action="#">
+  <input type="text" placeholder="Number_Integer" id="Number_Integer">
+  <input type="number" placeholder="Number_Integer" onkeyup="this.value = Validation.Number_Integer(this.value,8).Return();">
+  <input type="text" placeholder="Phone" onkeyup="this.value = Validation.Phone(this.value).Return()">
+  <input type="text" placeholder="Number_Float" onkeyup="this.value = Validation.Number_Float(this.value,8).Return();" >
+  <input type="text" placeholder="IdentificationCard" onkeyup="this.value = Validation.IdentificationCard(this.value).Return()">
+  <input type="text" placeholder="Number_Hexadecimal" onkeyup="this.value = Validation.Number_Hexadecimal(this.value,8).Return();" >
+  <input type="text" placeholder="Number_Decimal" onkeyup="this.value = Validation.Number_Decimal(this.value,8).Return();" >
+  <input type="text" placeholder="Time" id="Time" onkeyup="this.value = Validation.Time(this.value).Return();" >
+  <input type="time" placeholder="Time" >
+  <input type="submit" name="Test" value="Test">
+</form>
+
+
+<script>
+
+  var Validation =
+  {
+    Number_Integer : function ($Value,$Length)
+    {
+      // pattern="-\d+|\d+|+\d+"
+      return Filter($Value,$Length).Content('123456789').Edit((Char,Index,Class)=>
+      {
+        if ( Char === '0' && (Index > Class.$PlusLength) )
+        {
+          return  true;
+        }
+        if (!Index && "+-".includes(Char))
+        {
+          Class.PlusLength(1);
+          return true;
+        }
+      });
+    },
+    Number_Float : function ($Value,$Length)
+    {
+      // pattern="-\d+|+\d+|\d+|\d+.\d+|-\d+.\d+|+\d+.\d+"
+      return Filter($Value,$Length).Content('123456789').Edit((Char,Index,Class)=>
+      {
+        if ( Char === '0' && (Index > Class.$PlusLength) )
+        {
+          return  true;
+        }
+        if (!Index && "+-".includes(Char) || Index === Class.$Filter.indexOf('.') && Char === '.')
+        {
+          Class.PlusLength(1);
+          return true;
+        }
+      });
+    },
+    Number_Hexadecimal : function ($Value,$Length)
+    {
+      // pattern="^#[0-9a-fA-F]{6}$" === (parseInt("255")).toString(16)
+
+      return Filter($Value,$Length).Content('123456789ABCDEFabcdef').Edit((Char,Index,Class)=>
+      {
+        if ( Char === '0' && (Index > Class.$PlusLength) )
+        {
+          return  true;
+        }
+      }).CallBack((Value,Class)=>
+      {
+        if (Value)
+        {
+          Class.PlusLength(1);
+          return "#"+Value.toString().toUpperCase();
+        }
+      });
+    } ,
+    Number_Decimal : function ($Value,$Length)
+    {
+      return Filter($Value,$Length).Content('123456789').Edit((Char,Index,Class)=>
+      {
+        if ( Char === '0' && (Index > Class.$PlusLength) )
+        {
+          return  true;
+        }
+      });
+    },
+    Time : function ($Value,$Type = 12,$Space = ':')
+    {
+      // pattern="^[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+      let Number = '0123456789';
+      return Filter($Value,7).IndexOf({0:'01',1:Number,2:$Space,3:'012345',4:Number,5:'AP',6:'M'})
+      .CallBack((Value,Class)=>
+      {
+        let Hour = '', Space = '', Minute = '', Type = '';
+
+        if (Value.length)
+        {
+          Hour = parseInt(Value.substr(0,2));
+          if (Hour > ($Type-1))
+          {
+            Hour = $Type-1;
+          }
+          Space = $Space;
+        }
+
+        if (Value.length > 5)
+        {
+          Type = Value.substr(5,2).toUpperCase();
+          if (Type.length === 1)
+          {
+            Type += 'M';
+          }
+        }
+
+        if (Value.length > 3)
+        {
+          Minute = parseInt(Value.substr(3,2));
+          if (Minute > 59 )
+          {
+            Minute = 59;
+          }
+        }
+
+        if (Value.length > 1)
+        {
+          return Hour+Space+Minute+Type;
+        }
+        else
+        {
+          return Value.toString().toUpperCase();
+        }
+      });
+    },
+    Date : function ($Value,$Type = 12,$Space = ':')
+    {
+      // pattern="^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+      let Number = '0123456789';
+      return Filter($Value,7).IndexOf({0:'01',1:Number,2:$Space,3:'012345',4:Number,5:'AP',6:'M'})
+      .CallBack((Value,Class)=>
+      {
+        let Hour = '', Space = '', Minute = '', Type = '';
+
+        if (Value.length)
+        {
+          Hour = parseInt(Value.substr(0,2));
+          if (Hour > ($Type-1))
+          {
+            Hour = $Type-1;
+          }
+          Space = $Space;
+        }
+
+        if (Value.length > 5)
+        {
+          Type = Value.substr(5,2).toUpperCase();
+          if (Type.length === 1)
+          {
+            Type += 'M';
+          }
+        }
+
+        if (Value.length > 3)
+        {
+          Minute = parseInt(Value.substr(3,2));
+          if (Minute > 59 )
+          {
+            Minute = 59;
+          }
+        }
+
+        if (Value.length > 1)
+        {
+          return Hour+Space+Minute+Type;
+        }
+        else
+        {
+          return Value.toString().toUpperCase();
+        }
+      });
+    },
+    FullDate : function ($Value,$Type = 12,$Space = ':')
+    {
+      // pattern="^[0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}-[0-9]{2}-[0-9]{2}$"
+      let Number = '0123456789';
+      return Filter($Value,7).IndexOf({0:'01',1:Number,2:$Space,3:'012345',4:Number,5:'AP',6:'M'})
+      .CallBack((Value,Class)=>
+      {
+        let Hour = '', Space = '', Minute = '', Type = '';
+
+        if (Value.length)
+        {
+          Hour = parseInt(Value.substr(0,2));
+          if (Hour > ($Type-1))
+          {
+            Hour = $Type-1;
+          }
+          Space = $Space;
+        }
+
+        if (Value.length > 5)
+        {
+          Type = Value.substr(5,2).toUpperCase();
+          if (Type.length === 1)
+          {
+            Type += 'M';
+          }
+        }
+
+        if (Value.length > 3)
+        {
+          Minute = parseInt(Value.substr(3,2));
+          if (Minute > 59 )
+          {
+            Minute = 59;
+          }
+        }
+
+        if (Value.length > 1)
+        {
+          return Hour+Space+Minute+Type;
+        }
+        else
+        {
+          return Value.toString().toUpperCase();
+        }
+      });
+    },
+    IdentificationCard : function ($Value)
+    {
+      // pattern="^[0-9]{14}$"
+      return Filter($Value,16).Content('0123456789').CallBack((Value,Class)=>
+      {
+        let Return = '',Mode = 3;
+
+        $Value.split('').forEach((Value,Key)=>
+        {
+          console.info([Value,Key]);
+          if (Value !== '-')
+          {
+            Return += Value;
+            if (Key === Mode && Key < Class.$Length)
+            {
+              Mode = Key + 5;
+              Class.PlusLength(1);
+              Return += '-';
+            }
+          }
+        });
+
+        return Return;
+      });
+    },
+    Phone : function ($Value)
+    {
+      // pattern="^01[0|1|2|4|5]{1}[0-9]{8}$"
+      return Filter($Value,11).IndexOf({0:'0',1:'1',2:'0125'}).Edit((Char,Index,Class)=>
+      {
+        if (Index > 2 && "0123456789".includes(Char))
+        {
+          return true;
+        }
+      });
+    },
+  };
+  var Filter = function ($Value, $Length = null, $Content = null, $Include = null, $Equal = null, $IndexOf = null, $Format = null, $CallBack = null, $Edit = null, $NotContent = null, $NotInclude = null, $NotEqual = null, $NotIndexOf = null, $NotEdit = null )
+  {
+    /* ---------------------------------------------------------------------------------------------------------
+    == > || Variables
+     -------------------------------------------------------------------------------------------------------- */
+    let
+    $Return      = null,
+    $Filter      = null,
+    $PlusLength  = null
+    ;
+
+    /* ---------------------------------------------------------------------------------------------------------
+    == > || Methods [ Property ]
+     -------------------------------------------------------------------------------------------------------- */
+    function _Length_(Length = null)
+    {
+      if (typeof Length === 'number' && parseInt(Length))
+      {
+        $Length  = parseInt(Length);
+      }
+      else
+      {
+        $Length = null;
+      }
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _PlusLength_(PlusLength = null)
+    {
+      if (typeof PlusLength === 'number' && parseInt(PlusLength))
+      {
+        if ($PlusLength === null)
+        {
+          $PlusLength = 0;
+        }
+        $PlusLength  += parseInt(PlusLength);
+      }
+      else
+      {
+        $PlusLength = null;
+      }
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _Content_(Content = null, Not = false)
+    {
+      if (typeof Content === 'string' && Content.length )
+      {
+        Content = Content.toLowerCase();
+        if (Not)
+        {
+          if ($NotContent === null)
+          {
+            $NotContent = '';
+          }
+          $NotContent  += Content;
+        }
+        else
+        {
+          if ($Content === null)
+          {
+            $Content = '';
+          }
+          $Content  += Content;
+        }
+      }
+      else
+      {
+        if (Not)
+        {
+          $NotContent = null;
+        }
+        else
+        {
+          $Content = null;
+        }
+      }
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _Include_(Include = null, Not = false)
+    {
+      if (typeof Include === 'string' && Include.length )
+      {
+        Include = Include.toLowerCase();
+        if (Not)
+        {
+          if ($NotInclude === null)
+          {
+            $NotInclude = [];
+          }
+          $NotInclude.push(Include);
+        }
+        else
+        {
+          if ($Include === null)
+          {
+            $Include = [];
+          }
+          $Include.push(Include);
+        }
+      }
+      else
+      {
+        if (Not)
+        {
+          $NotInclude = null;
+        }
+        else
+        {
+          $Include = null;
+        }
+      }
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _Equal_(Equal = null, Not = false)
+    {
+      if (typeof Equal === 'string' && Equal.length )
+      {
+        Equal = Equal.toLowerCase();
+        if (Not)
+        {
+          if ($NotEqual === null)
+          {
+            $NotEqual = [];
+          }
+          $NotEqual.push(Equal);
+        }
+        else
+        {
+          if ($Equal === null)
+          {
+            $Equal = [];
+          }
+          $Equal.push(Equal);
+        }
+      }
+      else
+      {
+        if (Not)
+        {
+          $NotEqual = null;
+        }
+        else
+        {
+          $Equal = null;
+        }
+      }
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _IndexOf_(IndexOf = null, Not = false)
+    {
+      if (IndexOf !== null && typeof IndexOf === 'object')
+      {
+        Object.keys(IndexOf).forEach((Key) =>
+        {
+          if (Not)
+          {
+            if ($NotIndexOf === null)
+            {
+              $NotIndexOf = {};
+            }
+            if ($NotIndexOf.hasOwnProperty(Key))
+            {
+              $NotIndexOf[Key] += IndexOf[Key].toString().toLowerCase();
+            }
+            else
+            {
+              $NotIndexOf[Key] = IndexOf[Key].toString().toLowerCase();
+            }
+          }
+          else
+          {
+            if ($IndexOf === null)
+            {
+              $IndexOf = {};
+            }
+            if ($IndexOf.hasOwnProperty(Key))
+            {
+              $IndexOf[Key] += IndexOf[Key].toString().toLowerCase();
+            }
+            else
+            {
+              $IndexOf[Key] = IndexOf[Key].toString().toLowerCase();
+            }
+          }
+        });
+      }
+      else
+      {
+        if (Not)
+        {
+          $NotIndexOf = null;
+        }
+        else
+        {
+          $IndexOf = null;
+        }
+      }
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _Format_(Format = null)
+    {
+      if (typeof Format === 'string' && Format.length )
+      {
+        $Format  = Format;
+      }
+      else
+      {
+        $Format = null;
+      }
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _CallBack_(CallBack = null)
+    {
+      if (typeof CallBack === 'function')
+      {
+        $CallBack  = CallBack;
+      }
+      else
+      {
+        $CallBack = null;
+      }
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _Edit_(Edit = null, Not = false)
+    {
+      if (typeof Edit === 'function')
+      {
+        if (Not)
+        {
+          $NotEdit = Edit;
+        }
+        else
+        {
+          $Edit  = Edit;
+        }
+      }
+      else
+      {
+        if (Not)
+        {
+          $NotEdit = function ( Char, Index, Class ){ return false; };
+        }
+        else
+        {
+          $Edit = function ( Char, Index, Class ){ return false; };
+        }
+      }
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _Clear_(New)
+    {
+      $Return      = New.toString().toLowerCase();
+      $Filter      = null;
+      $Length      = null;
+      $PlusLength  = null;
+      $Edit        = function ( Char, Index, Class ){ return false; };
+      $NotEdit     = function ( Char, Index, Class ){ return false; };
+      $Equal       = null;
+      $NotEqual    = null;
+      $Content     = null;
+      $NotContent  = null;
+      $Include     = null;
+      $NotInclude  = null;
+      $IndexOf     = null;
+      $NotIndexOf  = null;
+      $CallBack    = null;
+      $Format      = null;
+      return this;
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function _Return_($Else = null)
+    {
+      $Filter = $Return;
+      $Return = '';
+
+      if (typeof $PlusLength !== "number")
+      {
+        $PlusLength = 0;
+      }
+
+      if ( !(($NotEqual !== null && $NotEqual.includes($Filter)) || $NotInclude !== null && $NotInclude.filter( (_) => { if(_.search($Filter) === 0) return 1 }).length) )
+      {
+        if ( ($Equal !== null && $Equal.includes($Filter)) || $Include !== null && $Include.filter( (_) => { if(_.search($Filter) === 0) return 1 }).length )
+        {
+          $Return = $Filter;
+        }
+        else
+        {
+          $Return = $Filter.split('').filter((Char, Index)=>
+          {
+            if ( !($NotEdit(Char,Index,_Class_()) || (typeof $NotContent === 'string' && $NotContent.includes(Char)) || ( $NotIndexOf !== null && typeof $NotIndexOf === 'object' && typeof $NotIndexOf[Index+$PlusLength] !=='undefined' && $NotIndexOf[Index+$PlusLength].includes(Char) )) )
+            {
+              if ( $Edit(Char,Index,_Class_()) || (typeof $Content === 'string' && $Content.includes(Char)) || ( $IndexOf !== null && typeof $IndexOf === 'object' && typeof $IndexOf[Index+$PlusLength] !=='undefined' && $IndexOf[Index+$PlusLength].includes(Char) ) )
+              {
+                return true;
+              }
+            }
+          }).join('');
+        }
+      }
+
+      if (typeof $CallBack === 'function')
+      {
+        $Return = $CallBack($Return,_Class_());
+      }
+
+      if ( $Else !== null && ($Return === null || $Return === '') )
+      {
+        $Return = $Else;
+        $Length = $Return.length;
+      }
+
+      if( typeof $Length !== 'number' && $Length < 1)
+      {
+        $Length = $Return.length;
+      }
+
+      if (typeof $PlusLength === "number")
+      {
+        $Length += $PlusLength;
+      }
+
+      $Return = $Return.slice(0,$Length);
+    }
+    // ---------------------------------------------------------------------------------------------------------
+    function Return($Else = null)
+    {
+      _Return_($Else);
+      return $Return;
+    }
+    /* ---------------------------------------------------------------------------------------------------------
+    == > || Constructor
+     -------------------------------------------------------------------------------------------------------- */
+    $Return = $Value.toString().toLowerCase();
+
+    _Length_($Length);
+    _Content_($Content);
+    _Content_($NotContent,true);
+    _Include_($Include);
+    _Include_($NotInclude,true);
+    _Equal_($Equal);
+    _Equal_($NotEqual,true);
+    _IndexOf_($IndexOf);
+    _IndexOf_($NotIndexOf,true);
+    _Format_($Format);
+    _CallBack_($CallBack);
+    _Edit_($Edit);
+    _Edit_($NotEdit,true);
+    /* ---------------------------------------------------------------------------------------------------------
+    == > || Methods [ Map ]
+     -------------------------------------------------------------------------------------------------------- */
+    function _Class_()
+    {
+      return {
+        /* -------------------------------------------------------------------------------------------------
+        == > || Vars
+         ------------------------------------------------------------------------------------------------ */
+        $Length      : $Length ,
+        $Content     : $Content ,
+        $NotContent  : $NotIndexOf ,
+        $Include     : $Include ,
+        $NotInclude  : $NotInclude ,
+        $Equal       : $Equal ,
+        $NotEqual    : $NotEqual ,
+        $IndexOf     : $IndexOf ,
+        $NotIndexOf  : $NotIndexOf ,
+        $Format      : $Format ,
+        $CallBack    : $CallBack ,
+        $Edit        : $Edit ,
+        $NotEdit     : $NotEdit ,
+        $Value       : $Value,
+        $Return      : $Return,
+        $Filter      : $Filter,
+        $PlusLength  : $PlusLength,
+
+        /* -------------------------------------------------------------------------------------------------
+        == > || Methods
+         ------------------------------------------------------------------------------------------------ */
+        Length      : _Length_ ,
+        Content     : _Content_ ,
+        Include     : _Include_ ,
+        Equal       : _Equal_ ,
+        IndexOf     : _IndexOf_ ,
+        Format      : _Format_ ,
+        CallBack    : _CallBack_ ,
+        Edit        : _Edit_ ,
+        PlusLength  : _PlusLength_,
+        Return      : Return,
+        /* -------------------------------------------------------------------------------------------------
+        == > || Additional [ Clear - Return - ReCall - PlusVars ]
+         ------------------------------------------------------------------------------------------------ */
+        _Clear_  : _Clear_ ,
+        _Filter_ : Filter ,
+        _Return_ : _Return_,
+      }
+
+    }
+    /* ---------------------------------------------------------------------------------------------------------
+    == > || Return [ Class ]
+     -------------------------------------------------------------------------------------------------------- */
+    return _Class_();
+  };
+</script>
+
+</body>
+</html>
